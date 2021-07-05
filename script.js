@@ -1,5 +1,8 @@
 const button = document.getElementById("button");
+const repeatButton = document.getElementById("repeat-button");
 const audioElement = document.getElementById("audio");
+let voiceRSSkey = "";
+let joke = "";
 
 // VoiceRSS Javascript SDK
 const VoiceRSS = {
@@ -106,14 +109,23 @@ const VoiceRSS = {
 };
 
 // Disable/Enable button
-function toggleButton() {
+function toggleButtons() {
   button.disabled = !button.disabled;
+  repeatButton.disabled = !repeatButton.disabled;
+  if (repeatButton.hidden && !repeatButton.disabled) {
+    repeatButton.hidden = false;
+  }
 }
 
 // Passing joke to VoiceRSS API
-function tellMe(joke) {
+function tellMeJoke() {
+  if (!voiceRSSkey) {
+    voiceRSSkey = window.prompt(
+      "Enter your VoiceRSS key.\nGet it for free from http://www.voicerss.org."
+    );
+  }
   VoiceRSS.speech({
-    key: "e5f5b55b111446799b9b144e88f98d0a",
+    key: voiceRSSkey,
     src: joke,
     hl: "en-us",
     v: "Linda",
@@ -124,9 +136,15 @@ function tellMe(joke) {
   });
 }
 
-// Get jokes from joke API
-async function getJokes() {
-  let joke = "";
+function repeatJoke() {
+  // Text-to-speech
+  tellMeJoke();
+  // Disable button
+  toggleButtons();
+}
+
+// Get joke from joke API
+async function getJoke() {
   const apiUrl = "https://v2.jokeapi.dev/joke/Any";
   try {
     const response = await fetch(apiUrl);
@@ -137,9 +155,9 @@ async function getJokes() {
       joke = data.joke;
     }
     // Text-to-speech
-    tellMe(joke);
+    tellMeJoke();
     // Disable button
-    toggleButton();
+    toggleButtons();
   } catch (error) {
     // Catch errors here
     console.log("whooops", error);
@@ -147,5 +165,6 @@ async function getJokes() {
 }
 
 // Event listeners
-button.addEventListener("click", getJokes);
-audioElement.addEventListener("ended", toggleButton);
+button.addEventListener("click", getJoke);
+repeatButton.addEventListener("click", repeatJoke);
+audioElement.addEventListener("ended", toggleButtons);
